@@ -10,6 +10,8 @@
   android:text="@string/connect_device"
   android:layout_width="match_parent"
   android:layout_height="50sp"
+  android:textSize="20sp"
+
   android:id="@+id/button1"/>
   <Button
     android:text= "@string/take_picture"
