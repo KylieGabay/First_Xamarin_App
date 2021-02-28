@@ -26,6 +26,7 @@ namespace First_Xamarin_App
         byte[] braillebyte;
         private byte[,] totalView;
         private int totalrow;
+        private int currentRow;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -55,13 +56,40 @@ namespace First_Xamarin_App
         private void Button_next_Click(object sender, EventArgs e)
         {
             KeysIAB = 20;
-            textView_displaybraille.Text = KeysIAB.ToString();
+            //textView_displaybraille.Text = KeysIAB.ToString();
+
+            if (braillebyte != null)
+            {
+                if (currentRow <= totalrow) //if within the range, di lalagpas sa rows, gogogo
+                {
+                    currentRow = currentRow + 1; //set row
+                    DisplayBraille(currentRow);
+                    //pause for a while before it reads another key again
+
+                }
+                KeysIAB = 0;
+
+            }
         }
 
         private void Button_previous_Click(object sender, EventArgs e)
         {
             KeysIAB = 1;
-            textView_displaybraille.Text = KeysIAB.ToString();
+            //textView_displaybraille.Text = KeysIAB.ToString();
+
+
+            if (braillebyte != null)
+            {
+                if (currentRow >= 0) //if within the range, di bababa sa zero, gogogo
+                {
+                    currentRow = currentRow - 1; //set row
+                    DisplayBraille(currentRow);
+                    //pause for a while before it reads another key again
+
+                }
+                KeysIAB = 0;
+
+            }
         }
 
         private void Translate(string text)
@@ -141,14 +169,17 @@ namespace First_Xamarin_App
 
             if (totalView != null)
             {
-                DisplayBraille(0);
+                currentRow = 0;
+                DisplayBraille(currentRow);
             }
         }
 
         private void DisplayBraille(int currow)
-        {            
+        {
             //interfacing the braille bytes
             byte[] currentView = new byte[20];
+
+            if (currow >= totalrow || currow < 0) { return; }
 
             for (int s = 0; s < 20; s++)
             {
