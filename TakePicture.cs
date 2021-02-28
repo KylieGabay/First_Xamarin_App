@@ -26,6 +26,9 @@ using ScanbotSDK.Xamarin.Android;
 
 using Xamarin.Essentials;
 
+//for file
+using System.IO;
+
 namespace First_Xamarin_App
 {
     [Activity(Name = "com.companyname.first_xamarin_app.TakePicture", Label = "TakePicture")]
@@ -56,6 +59,8 @@ namespace First_Xamarin_App
             // Create your application here
             //set connect device layout
             SetContentView(Resource.Layout.activity_take_picture);
+            //xamarin essentials
+            Platform.Init(this, savedInstanceState);
 
             //reference buttons or imageview from layout xml. camera and gallery
             Button button0 = FindViewById<Button>(Resource.Id.button0);
@@ -67,22 +72,19 @@ namespace First_Xamarin_App
 
             button_capture.Click += Button_capture_Click;
             button_import.Click += Button_import_Click;
+
             RequestPermissions(permissionGroup, 0);
-
             PermissionUtils.Request(this, FindViewById(Resource.Layout.activity_main));
-
-            //save into file
-            Platform.Init(this, savedInstanceState); //internal data
         }
 
         private void Button_import_Click(object sender, EventArgs e)
         {
-            ImportPhoto();
+            ImportPhoto(); //and docu detect and ocr
         }
 
         private void Button_capture_Click(object sender, EventArgs e)
         {
-            TakePhoto();
+            TakePhoto(); //and docu detect and ocr
         }
 
         async void TakePhoto()
@@ -97,22 +99,21 @@ namespace First_Xamarin_App
 
             });
 
-            if (file == null)
-            {
-                return;
-            }
+            if (file == null) {return;}
 
             //Convert file to byte array and set the resulting bitmap to imageView
-            byte[] imageArray = System.IO.File.ReadAllBytes(file.Path);
+            byte[] imageArray = File.ReadAllBytes(file.Path);
 
             //decode bytes as bitmap from scanbot sdk
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.InSampleSize = 1;
-            var originalBitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length, options);
-            //imageView1.SetImageBitmap(originalBitmap);
+            BitmapFactory.Options options = new BitmapFactory.Options
+            {
+                InSampleSize = 1  //also options.InSampleSize = 1;
+            };
+            var originalBitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length, options);            
+            if (originalBitmap == null) {return;}
+            imageView1.SetImageBitmap(originalBitmap);
 
             DetectDocument(originalBitmap);
-            RecognizeText();
         }
 
         async void ImportPhoto()
@@ -132,16 +133,18 @@ namespace First_Xamarin_App
             });
 
             //Convert file to byte array, to bitmap and set it to our imageView
-            byte[] imageArray = System.IO.File.ReadAllBytes(file.Path);
+            byte[] imageArray = File.ReadAllBytes(file.Path);
 
             //decode bytes as bitmap from scanbot sdk
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.InSampleSize = 1;
+            BitmapFactory.Options options = new BitmapFactory.Options
+            {
+                InSampleSize = 1
+            };
             var originalBitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length,options);
-            //imageView1.SetImageBitmap(originalBitmap);
+            if (originalBitmap == null) { return; }
+            imageView1.SetImageBitmap(originalBitmap);
 
             DetectDocument(originalBitmap);
-            RecognizeText();
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Android.Content.PM.Permission[] grantResults)
@@ -151,7 +154,7 @@ namespace First_Xamarin_App
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
-        void DetectDocument(Bitmap bitmap)
+        private void DetectDocument(Bitmap bitmap)
         {
             if (!CheckScanbotSDKLicense()) { return; }
 
@@ -179,11 +182,15 @@ namespace First_Xamarin_App
                 //No docu!
                 documentImageUri = originalImgUri;
                 DebugLog("No document detected!");
-            }           
+            }
 
+            if (documentImageUri != null)
+            {
+                RecognizeText();
+            }
         }
 
-        void RecognizeText()
+        private void RecognizeText()
         {
             Task.Run(() => {
             try
@@ -195,20 +202,19 @@ namespace First_Xamarin_App
                 var result = SBSDK.PerformOCR(images, new[] { "en", "de" });
                 DebugLog("Recognized OCR text: " + result.RecognizedText);
 
-                    //switch to ocr layout
-                    //DisplayOcr(result.RecognizedText);
+                //switch to readbraille layout
+                Intent nextActivity = new Intent(this, typeof(ReadBraille));
+                nextActivity.PutExtra("text", result.RecognizedText);
+                if(nextActivity == null) { return; }
+                StartActivity(nextActivity);
                 }
+
             catch (Exception e)
             {
                 ErrorLog("Error performing OCR", e);
             }
 
             });
-        }
-
-        private void DisplayOcr(String ocrtext)
-        {
-
         }
 
         bool CheckScanbotSDKLicense()
@@ -222,7 +228,6 @@ namespace First_Xamarin_App
             Toast.MakeText(this, "Scanbot SDK (trial) license has expired!", ToastLength.Long).Show();
             return false;
         }
-
         void DebugLog(string msg)
         {
             Log.Debug(LOG_TAG, msg);
