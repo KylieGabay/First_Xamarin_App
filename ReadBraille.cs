@@ -97,10 +97,10 @@ namespace First_Xamarin_App
             //todo: collect all in enum? indexer?
             String abc = " abcdefghijklmnopqrstuvwxyz,.;:!?";
             String sym = "+ - * ÷ = ( ) ^ ~ & $ @ < > _ % [ ] # | / ";
-            String num = " 123456789";
+            String num = " 1234567890";
             char[] alphabet = abc.ToCharArray();
             char[] symbol = sym.ToCharArray();
-            char[] number = num.ToCharArray(); //todo: enable numbers
+            char[] number = num.ToCharArray();
             byte[] valuesOfAlphabet = { 0, 128, 192, 144, 152, 136, 208, 216, 200, 80, 88, 160, 224, 176, 184, 168, 240, 248, 232, 112, 120, 164, 228, 92, 180, 188, 172, 64, 76, 96, 72, 104, 100 }; //add (byte) before number if di gumana
             byte[] valuesOfSymbol = { 8, 104, 8, 36, 8, 100, 8, 48, 8, 108, 8, 196, 8, 56, 16, 68, 16, 40, 16, 244, 16, 112, 16, 128, 16, 196, 16, 56, 20, 36, 20, 44, 20, 196, 20, 56, 28, 148, 28, 204, 28, 132 };
 
@@ -115,30 +115,143 @@ namespace First_Xamarin_App
             {
                 for (int j = 0; j < symbol.Length; j++)
                 {
-                    if (j < alphabet.Length)
+                    if (j < alphabet.Length) //check only within the bounds of alphabet array
                     {
                         bool IsCapslock = (arraytext[i].ToString()).Equals(alphabet[j].ToString(), StringComparison.OrdinalIgnoreCase);
                         //case sensitive, lowercase only
                         if (arraytext[i] == alphabet[j])
                         {
+                            int ignoreMe;
+                            if (i != 0)
+                            {
+                                if (int.TryParse(arraytext[i - 1].ToString(), out ignoreMe) == false)
+                                {
+                                    //if before char is not a number, proceed as usual
+                                    braillebyte[k] = valuesOfAlphabet[j];
+                                    k++;
+                                    break; //once it finds what it needs, it stops scanning, then scans for the next char
+                                }
+                                else if (int.TryParse(arraytext[i - 1].ToString(), out ignoreMe))
+                                {
+                                    //if before char is a number
+                                    //check if the char now is a-j
+                                    //if it is, add letter sign before it                                
+                                    if (arraytext[i] >= 'a' && arraytext[i] <= 'j')
+                                    {
+                                        Array.Resize(ref braillebyte, braillebyte.Length + 1); //adds length than initial
+                                        braillebyte[k] = 12; //byte for letter sign (force stop of number sign)
+                                        k++;
+                                        braillebyte[k] = valuesOfAlphabet[j];
+                                        k++;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        //else if k-z
+                                        braillebyte[k] = valuesOfAlphabet[j];
+                                        k++;
+                                        break;
+                                    }
+                                }
+                            }
+                            //if initial
                             braillebyte[k] = valuesOfAlphabet[j];
                             k++;
                             break;
                         }
-                        //case insensitive, compare upper with lower case
-                        //todo: allocated length noW enough                       
+                        //case insensitive, compare upper with lower case                 
                         else if (IsCapslock)
                         {
+                            int ignoreMe;
+                            //if before char is not a number, proceed as usual
+                            if (i != 0)
+                            {
+                                if (int.TryParse(arraytext[i - 1].ToString(), out ignoreMe) == false)
+                                {
+                                    Array.Resize(ref braillebyte, braillebyte.Length + 1);
+                                    braillebyte[k] = 4; //byte for capslock indicator
+                                    k++;
+                                    braillebyte[k] = valuesOfAlphabet[j];
+                                    k++;
+                                    break;
+                                }
+
+                                else if (int.TryParse(arraytext[i - 1].ToString(), out ignoreMe))
+                                {
+                                    //if before char is a number
+                                    //check if the char now is A-J
+                                    //if it is, add letter sign before it                                
+                                    if (arraytext[i] >= 'A' && arraytext[i] <= 'J')
+                                    {
+                                        Array.Resize(ref braillebyte, braillebyte.Length + 2);
+                                        braillebyte[k] = 12; //byte for letter sign (force stop of number sign)
+                                        k++;
+                                        braillebyte[k] = 4; //byte for capslock indicator
+                                        k++;
+                                        braillebyte[k] = valuesOfAlphabet[j];
+                                        k++;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        //else if k-z
+                                        Array.Resize(ref braillebyte, braillebyte.Length + 1);
+                                        braillebyte[k] = 4; //byte for capslock indicator
+                                        k++;
+                                        braillebyte[k] = valuesOfAlphabet[j];
+                                        k++;
+                                        break;
+                                    }
+                                }
+                            }
+                            //if initial
                             Array.Resize(ref braillebyte, braillebyte.Length + 1);
                             braillebyte[k] = 4; //byte for capslock indicator
                             k++;
                             braillebyte[k] = valuesOfAlphabet[j];
                             k++;
+                            break;
+                        }                    
+                    }
+
+                    if (j < number.Length) //check only within the bounds of number array
+                    {
+                        if (arraytext[i] == number[j])
+                        {
+                            int ignoreMe;
+                            //if before char is a number (or comma, colon, hyphen, fraction, decimal)
+                            if (i != 0)
+                            {
+                                if (int.TryParse(arraytext[i - 1].ToString(), out ignoreMe))
+                                {
+                                    braillebyte[k] = valuesOfAlphabet[j]; //don't add number indicator
+                                    k++;
+                                    break;
+                                }
+                                //if before char is not a number or is equal to space
+                                else if ((int.TryParse(arraytext[i - 1].ToString(), out ignoreMe) == false) || (arraytext[i - 1].ToString() == " "))
+                                {
+                                    Array.Resize(ref braillebyte, braillebyte.Length + 1);
+                                    braillebyte[k] = 60; //add byte for number indicator
+                                    k++;
+                                    braillebyte[k] = valuesOfAlphabet[j];
+                                    k++;
+                                    break;
+                                }
+                            }
+                            //if initial
+                            Array.Resize(ref braillebyte, braillebyte.Length + 1);
+                            braillebyte[k] = 60; //add byte for number indicator
+                            k++;
+                            braillebyte[k] = valuesOfAlphabet[j];
+                            k++;
+                            break;
                         }
                     }
 
                     if (arraytext[i] == symbol[j])
                     {
+                        Array.Resize(ref braillebyte, braillebyte.Length + 1);
                         braillebyte[k] = valuesOfSymbol[j];
                         k++;
                         braillebyte[k] = valuesOfSymbol[j + 1];
