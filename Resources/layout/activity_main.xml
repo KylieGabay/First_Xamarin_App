@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+
+<Button
+  android:text="@string/connect_device"
+  android:layout_width="match_parent"
+  android:layout_height="50sp"
+  android:id="@+id/button1"/>
+  <Button
+    android:text= "@string/take_picture"
+    android:layout_width="match_parent"
+    android:layout_height="50sp"
+    android:textSize="20sp"
+    android:layout_marginTop="50dp"
+    android:padding="10dp"
+    android:id="@+id/button2" />
+  <Button
+    android:text= "@string/read_saved_text"
+    android:layout_width="match_parent"
+    android:layout_height="50sp"
+    android:textSize="20sp"
+    android:layout_marginTop="100dp"
+    android:padding="10dp"
+    android:id="@+id/button3" />
+
+</RelativeLayout>
