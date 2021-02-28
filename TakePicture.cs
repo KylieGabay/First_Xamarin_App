@@ -28,6 +28,8 @@ using Xamarin.Essentials;
 
 //for file
 using System.IO;
+using Java.IO;
+using System.IO.Compression;
 
 namespace First_Xamarin_App
 {
@@ -73,8 +75,19 @@ namespace First_Xamarin_App
             button_capture.Click += Button_capture_Click;
             button_import.Click += Button_import_Click;
 
-            RequestPermissions(permissionGroup, 0);
-            PermissionUtils.Request(this, FindViewById(Resource.Layout.activity_main));
+            int count = 0;
+            if (count == 0) {
+                RequestPermissions(permissionGroup, 0);
+                PermissionUtils.Request(this, FindViewById(Resource.Layout.activity_main));
+                count++;
+            }
+
+            byte[] compressedbytes = Intent.GetByteArrayExtra("bytearray");
+            if (compressedbytes != null)
+            {
+                TakePhoto(compressedbytes);
+            }
+
         }
 
         private void Button_import_Click(object sender, EventArgs e)
@@ -82,35 +95,66 @@ namespace First_Xamarin_App
             ImportPhoto(); //and docu detect and ocr
         }
 
-        private void Button_capture_Click(object sender, EventArgs e)
+        private async void Button_capture_Click(object sender, EventArgs e)
         {
-            TakePhoto(); //and docu detect and ocr
+            //implement launching another app at a push of a button
+            if (await Launcher.CanOpenAsync("http://kyliegabay.github.io"))
+            {
+                await Launcher.OpenAsync("http://kyliegabay.github.io/scan");
+            }
+
+            //TakePhoto(); //and docu detect and ocr
         }
 
-        async void TakePhoto()
+        void TakePhoto(byte[] compressedbytes)
         {
-            await CrossMedia.Current.Initialize();
 
-            var file = await CrossMedia.Current.TakePhotoAsync(new Plugin.Media.Abstractions.StoreCameraMediaOptions {
-                PhotoSize = Plugin.Media.Abstractions.PhotoSize.Medium,
-                CompressionQuality = 40,
-                Name = "image.jpg",
-                Directory = "sample"
+            //await CrossMedia.Current.Initialize();
 
-            });
+            //var file = await CrossMedia.Current.TakePhotoAsync(new Plugin.Media.Abstractions.StoreCameraMediaOptions
+            //{
+            //    PhotoSize = Plugin.Media.Abstractions.PhotoSize.Medium,
+            //    CompressionQuality = 40,
+            //    Name = "image.jpg",
+            //    Directory = "sample"
 
-            if (file == null) {return;}
+            //});
+
+            //if (file == null) { return; }
 
             //Convert file to byte array and set the resulting bitmap to imageView
-            byte[] imageArray = File.ReadAllBytes(file.Path);
+            //byte[] imageArray = File.ReadAllBytes(file.Path);
 
             //decode bytes as bitmap from scanbot sdk
+            //BitmapFactory.Options options = new BitmapFactory.Options
+            //{
+            //    InSampleSize = 1  //also options.InSampleSize = 1;
+            //};
+            //var originalBitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length, options);
+            //if (originalBitmap == null) { return; }
+
+            //get bitmap from filename
+            //Bitmap bmp = null;
+            //try
+            //{
+            //    //FileInputStream
+            //    MemoryStream inputstream = (MemoryStream)ApplicationContext.OpenFileInput(filename);
+            //    bmp = BitmapFactory.DecodeStream(inputstream);
+            //    inputstream.Close();
+            //}
+            //catch (Exception e) {
+            //    DebugLog(e.ToString());
+            //}
+            //if (bmp == null) { return; }
+
+            byte[] bytearray = Decompress(compressedbytes);
             BitmapFactory.Options options = new BitmapFactory.Options
             {
                 InSampleSize = 1  //also options.InSampleSize = 1;
             };
-            var originalBitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length, options);            
-            if (originalBitmap == null) {return;}
+            var originalBitmap = BitmapFactory.DecodeByteArray(bytearray, 0, bytearray.Length, options);
+            if (originalBitmap == null) { return; }
+
             imageView1.SetImageBitmap(originalBitmap);
 
             DetectDocument(originalBitmap);
@@ -133,7 +177,7 @@ namespace First_Xamarin_App
             });
 
             //Convert file to byte array, to bitmap and set it to our imageView
-            byte[] imageArray = File.ReadAllBytes(file.Path);
+            byte[] imageArray = System.IO.File.ReadAllBytes(file.Path);
 
             //decode bytes as bitmap from scanbot sdk
             BitmapFactory.Options options = new BitmapFactory.Options
@@ -192,6 +236,10 @@ namespace First_Xamarin_App
 
         private void RecognizeText()
         {
+            String status = "reading the recognized text";
+            SpeakStatus(status);
+
+
             Task.Run(() => {
             try
             {
@@ -217,6 +265,14 @@ namespace First_Xamarin_App
             });
         }
 
+        private async void SpeakStatus(string status) {
+            //voice indicator
+            await Task.Run(async () =>
+            {
+                await TextToSpeech.SpeakAsync(status);
+            });
+        }
+
         bool CheckScanbotSDKLicense()
         {
             if (SBSDK.IsLicenseValid())
@@ -236,5 +292,17 @@ namespace First_Xamarin_App
         {
             Log.Error(LOG_TAG, Java.Lang.Throwable.FromException(ex), msg);
         }
-    }
+
+        public static byte[] Decompress(byte[] data)
+        {
+            MemoryStream input = new MemoryStream(data);
+            MemoryStream output = new MemoryStream();
+            using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
+            {
+                dstream.CopyTo(output);
+            }
+            return output.ToArray();
+        }
+    }  
+
 }

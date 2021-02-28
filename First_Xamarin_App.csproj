@@ -58,6 +58,9 @@
     <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Sample_Bindings_Library">
+      <HintPath>..\Trial_Bindings_Library\Sample_Bindings_Library\bin\Debug\Sample_Bindings_Library.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
@@ -94,21 +97,6 @@
     <AndroidResource Include="Resources\values\styles.xml" />
     <AndroidResource Include="Resources\mipmap-anydpi-v26\ic_launcher.xml" />
     <AndroidResource Include="Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
-    <AndroidResource Include="Resources\mipmap-hdpi\ic_launcher.png" />
-    <AndroidResource Include="Resources\mipmap-hdpi\ic_launcher_foreground.png" />
-    <AndroidResource Include="Resources\mipmap-hdpi\ic_launcher_round.png" />
-    <AndroidResource Include="Resources\mipmap-mdpi\ic_launcher.png" />
-    <AndroidResource Include="Resources\mipmap-mdpi\ic_launcher_foreground.png" />
-    <AndroidResource Include="Resources\mipmap-mdpi\ic_launcher_round.png" />
-    <AndroidResource Include="Resources\mipmap-xhdpi\ic_launcher.png" />
-    <AndroidResource Include="Resources\mipmap-xhdpi\ic_launcher_foreground.png" />
-    <AndroidResource Include="Resources\mipmap-xhdpi\ic_launcher_round.png" />
-    <AndroidResource Include="Resources\mipmap-xxhdpi\ic_launcher.png" />
-    <AndroidResource Include="Resources\mipmap-xxhdpi\ic_launcher_foreground.png" />
-    <AndroidResource Include="Resources\mipmap-xxhdpi\ic_launcher_round.png" />
-    <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher.png" />
-    <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher_foreground.png" />
-    <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher_round.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ScanbotSDK.Xamarin">
@@ -148,6 +136,21 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="Assets\FileSystemTemplate.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\mipmap-hdpi\ic_launcher_isight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\mipmap-mdpi\ic_launcher_isight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\mipmap-xhdpi\ic_launcher_isight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\mipmap-xxhdpi\ic_launcher_isight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher_isight.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

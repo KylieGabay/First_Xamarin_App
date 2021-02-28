@@ -12,7 +12,8 @@ using Android.Widget;
 
 using Android.Support.V7.App;
 using Android.Util;
-
+using System.Threading.Tasks;
+using Xamarin.Essentials;
 
 namespace First_Xamarin_App
 {
@@ -94,6 +95,13 @@ namespace First_Xamarin_App
 
         private void Translate(string text)
         {
+            String status = "translating to Braille";
+            SpeakStatus(status);
+
+            status = "OCR text reading demo";
+            SpeakStatus(status);
+            SpeakStatus(text);
+
             //todo: collect all in enum? indexer?
             String abc = " abcdefghijklmnopqrstuvwxyz,.;:!?";
             String sym = "+ - * ÷ = ( ) ^ ~ & $ @ < > _ % [ ] # | / ";
@@ -309,6 +317,15 @@ namespace First_Xamarin_App
         private void BrailleinTextView(byte[] currentView)
         {
             textView_displaybraille.Text = BitConverter.ToString(currentView);
+        }
+
+        private async void SpeakStatus(string status)
+        {
+            //voice indicator
+            await Task.Run(async () =>
+            {
+                await TextToSpeech.SpeakAsync(status);
+            });
         }
 
         void DebugLog(string msg)
