@@ -9,6 +9,8 @@
     <string name="contentDescription">Preview of image taken</string>
     <string name="capture_image">Capture Image</string>
     <string name="import_gallery">Import From Gallery</string>
-  <string name="save_text">Save Text</string>
-  <string name="retake">Retake</string>
+    <string name="save_text">Save Text</string>
+    <string name="retake">Retake</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
 </resources>
