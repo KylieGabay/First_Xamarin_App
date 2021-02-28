@@ -49,8 +49,6 @@ namespace First_Xamarin_App
             Manifest.Permission.Camera
         };
 
-        const string templateFileName = "FileSystemTemplate.txt";
-
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -74,7 +72,7 @@ namespace First_Xamarin_App
             PermissionUtils.Request(this, FindViewById(Resource.Layout.activity_main));
 
             //save into file
-            Xamarin.Essentials.Platform.Init(this, savedInstanceState); //internal data
+            Platform.Init(this, savedInstanceState); //internal data
         }
 
         private void Button_import_Click(object sender, EventArgs e)
@@ -140,7 +138,7 @@ namespace First_Xamarin_App
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.InSampleSize = 1;
             var originalBitmap = BitmapFactory.DecodeByteArray(imageArray, 0, imageArray.Length,options);
-            imageView1.SetImageBitmap(originalBitmap);
+            //imageView1.SetImageBitmap(originalBitmap);
 
             DetectDocument(originalBitmap);
             RecognizeText();
@@ -148,7 +146,7 @@ namespace First_Xamarin_App
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Android.Content.PM.Permission[] grantResults)
         {   //camera and gallery
-            Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
@@ -159,8 +157,6 @@ namespace First_Xamarin_App
 
             //store original image as file          
             var originalImgUri = MainApplication.TempImageStorage.AddImage(bitmap);
-            //Android.Net.Uri documentImgUri = null;
-
             var detectionResult = SBSDK.DetectDocument(bitmap);
 
             DebugLog("Document detection result: " + detectionResult.Status);
@@ -183,16 +179,7 @@ namespace First_Xamarin_App
                 //No docu!
                 documentImageUri = originalImgUri;
                 DebugLog("No document detected!");
-            }
-            
-
-            ////Bitmap to URI - to be passed to ocr that only accepts URI
-            //Bundle extras = new Bundle();
-            //extras.PutString(EXTRAS_ARG_DOC_IMAGE_FILE_URI, documentImageUri.ToString());
-            //extras.PutString(EXTRAS_ARG_ORIGINAL_IMAGE_FILE_URI, originalImgUri.ToString());
-            //Intent intent = new Intent();
-            //intent.PutExtras(extras);
-            //SetResult(Result.Ok, intent);// not entirely sure if this poops out documentImageUri
+            }           
 
         }
 
@@ -202,7 +189,6 @@ namespace First_Xamarin_App
             try
             {
                 if (!CheckScanbotSDKLicense()) { return; }
-                if (!CheckDocumentImage()) { return; }
 
                 var images = new AndroidNetUri[] { documentImageUri };
                 // SDK call is sync
@@ -210,7 +196,7 @@ namespace First_Xamarin_App
                 DebugLog("Recognized OCR text: " + result.RecognizedText);
 
                     //switch to ocr layout
-                    DisplayOcr(result.RecognizedText);
+                    //DisplayOcr(result.RecognizedText);
                 }
             catch (Exception e)
             {
@@ -222,102 +208,9 @@ namespace First_Xamarin_App
 
         private void DisplayOcr(String ocrtext)
         {
-            var pdfOutputUri = GenerateRandomFileUrlInDemoTempStorage(".pdf");
-            ShowAlertDialog(ocrtext, "OCR Result", () =>
-            {
-                //OpenSharingDialog(pdfOutputUri, "application/pdf");
-            });  
-
-
-            //SetContentView(Resource.Layout.activity_ocr);
-            //TextView ocr_text = FindViewById<TextView>(Resource.Id.ocr_text);
-            //ocr_text.Text = ocrtext;
-
-            //Button button_retake = FindViewById<Button>(Resource.Id.button_retake);
-            //button_retake.Click += delegate { StartActivity(typeof(TakePicture)); };
-
-            //Button button_save_text = FindViewById<Button>(Resource.Id.button_save_text);
-            //button_save_text.Click += Button_save_text_Click;
-
-            //activity_ocr is not used
 
         }
 
-        private void Button_save_text_Click(object sender, EventArgs e)
-        {
-            //TODO
-            //save ocr in a file
-            //translate into braille
-            //show or save braille combination
-            //save both in one?
-        }
-
-        AndroidNetUri GenerateRandomFileUrlInDemoTempStorage(string fileExtension) //can be used to store pdfs of ocr or pictures, see open sharing dialog
-
-        {
-            var targetFile = System.IO.Path.Combine(MainApplication.TempImageStorage.TempDir, UUID.RandomUUID() + fileExtension);
-            return AndroidNetUri.FromFile(new Java.IO.File(targetFile));
-        }
-
-        void ShowAlertDialog(string message, string title = "Info", Action onDismiss = null)
-        {
-            RunOnUiThread(() =>
-            {
-                //to name and save file
-                //inflate layout
-                LayoutInflater layoutInflater = LayoutInflater.From(Application.Context);
-                View _view = layoutInflater.Inflate(Resource.Layout.activity_alert_dialog, null);
-                //get view elements
-                EditText editText = (EditText)_view.FindViewById(Resource.Id.editText);
-
-                Android.App.AlertDialog.Builder builder = new Android.App.AlertDialog.Builder(this);
-                builder.SetTitle(title);
-                builder.SetMessage(message);
-
-                builder.SetView(_view);
-
-                var alert = builder.Create();
-                alert.SetButton("Save", (s, e) => // "OK" before c,ev
-                {
-                    //alert.Dismiss();
-                    //onDismiss?.Invoke();
-
-                    var title_ocr = editText.Text;  //use as filename of text file
-                    //write 'message' in a text file
-
-                    Toast.MakeText(this, $"OCR text saved! Go to Read Braille to read braille.", ToastLength.Long).Show();
-                });
-
-                alert.SetButton("Cancel", (se, enn) =>
-                {
-                    alert.Dismiss();
-                    onDismiss?.Invoke();
-                });
-
-                alert.Show();
-            });
-        }
-        void OpenSharingDialog(AndroidNetUri publicFileUri, string mimeType)
-        {
-            // Please note: To be able to share a file on Android it must be in a public folder. 
-            // If you need a secure place to store PDF, TIFF, etc, do NOT use this sharing solution!
-            // Also see the initialization of the TempImageStorage in the MainApplication class.
-
-            Intent shareIntent = new Intent(Intent.ActionSend);
-            shareIntent.SetType(mimeType);
-            shareIntent.PutExtra(Intent.ExtraStream, publicFileUri);
-            StartActivity(shareIntent); //Exception error
-        }
-
-        bool CheckDocumentImage()
-        {
-            if (documentImageUri == null)
-            {
-                Toast.MakeText(this, "No image processed. Take a photo or select from gallery", ToastLength.Long).Show();
-                return false;
-            }
-            return true;
-        }
         bool CheckScanbotSDKLicense()
         {
             if (SBSDK.IsLicenseValid())
